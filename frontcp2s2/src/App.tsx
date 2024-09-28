@@ -15,6 +15,7 @@ function App() {
     title: string;
     description: string;
     isComplete: boolean;
+    todo: Todo[];
   }
 
   const baseUrl = "https://todo-caio.azurewebsites.net/api/";
@@ -59,9 +60,9 @@ function App() {
   // Add new target
   const postTarget = async () => {
     try {
-      const response = await requestBase.post("Targets", newTarget);
-      setTargets([...targets, response.data]);
+      await requestBase.post("Targets", newTarget);
       setNewTarget({ title: "", description: "" });
+      getTargets(); // Atualiza os targets
     } catch (error) {
       console.error("Erro ao adicionar target:", error);
     }
@@ -70,13 +71,15 @@ function App() {
   // Add new todo
   const postTodo = async () => {
     try {
-      const response = await requestBase.post("Todo", {
+      await requestBase.post("Todo", {
         title: newTodo.title,
         description: newTodo.description,
         isComplete: false,
         targetId: newTodo.targetId,
       });
-      console.log("Novo Todo criado:", response.data);
+      setNewTodo({ title: "", description: "", targetId: 0 });
+      getTodos(); // Atualiza os todos
+      window.location.reload();
     } catch (error) {
       console.error("Erro na requisição:", error);
     }
@@ -86,15 +89,13 @@ function App() {
   const putTodo = async () => {
     if (todoId === null) return;
     try {
-      const response = await requestBase.put(`Todos/${todoId}`, {
+      await requestBase.put(`Todos/${todoId}`, {
         ...newTodo,
         id: todoId,
       });
-      setTodos(
-        todos.map((todo) => (todo.id === todoId ? response.data : todo))
-      );
       setTodoId(null);
       setNewTodo({ title: "", description: "", targetId: 0 });
+      getTodos(); // Atualiza os todos
     } catch (error) {
       console.error("Erro ao atualizar todo:", error);
     }
@@ -104,7 +105,7 @@ function App() {
   const deleteTodo = async (id: number) => {
     try {
       await requestBase.delete(`Todos/${id}`);
-      setTodos(todos.filter((todo) => todo.id !== id));
+      getTodos(); // Atualiza os todos
     } catch (error) {
       console.error("Erro ao excluir todo:", error);
     }
@@ -114,8 +115,8 @@ function App() {
   const deleteTarget = async (id: number) => {
     try {
       await requestBase.delete(`Targets/${id}`);
-      setTargets(targets.filter((target) => target.id !== id));
-      setTodos(todos.filter((todo) => todo.targetId !== id));
+      getTargets(); // Atualiza os targets
+      getTodos(); // Atualiza os todos
     } catch (error) {
       console.error("Erro ao excluir target:", error);
     }
@@ -129,17 +130,13 @@ function App() {
         (target) => target.id === targetIdToEdit
       );
       if (targetToUpdate) {
-        const response = await requestBase.put(`Targets/${targetIdToEdit}`, {
+        await requestBase.put(`Targets/${targetIdToEdit}`, {
           ...targetToUpdate,
           ...newTarget,
         });
-        setTargets(
-          targets.map((target) =>
-            target.id === targetIdToEdit ? response.data : target
-          )
-        );
         setTargetIdToEdit(null);
         setNewTarget({ title: "", description: "" });
+        getTargets(); // Atualiza os targets
       }
     } catch (error) {
       console.error("Erro ao atualizar target:", error);
@@ -232,6 +229,9 @@ function App() {
       {targets.map((target) => (
         <div key={target.id}>
           <h3>{target.title}</h3>
+          {target.todo.map((todo) => (
+            <h2 key={todo.id}>{todo.description}</h2>
+          ))}
           {todos
             .filter((todo) => todo.targetId === target.id) // Filtra os todos pelo targetId
             .map((todo) => (
@@ -244,9 +244,6 @@ function App() {
                 </button>
               </div>
             ))}
-          {todos.filter((todo) => todo.targetId === target.id).length === 0 && (
-            <p>Nenhum todo encontrado.</p>
-          )}
         </div>
       ))}
     </div>
