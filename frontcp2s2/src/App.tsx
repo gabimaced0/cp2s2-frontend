@@ -152,6 +152,7 @@ function App() {
     <div>
       <h1>Todo App</h1>
 
+      {/* Adicionar Targets */}
       <h2>Add Target</h2>
       <input
         type="text"
@@ -171,6 +172,7 @@ function App() {
         {targetIdToEdit ? "Update Target" : "Add Target"}
       </button>
 
+      {/* Listar Targets */}
       <h2>Targets</h2>
       <ul>
         {targets.map((target) => (
@@ -193,6 +195,7 @@ function App() {
         ))}
       </ul>
 
+      {/* Adicionar Todos */}
       <h2>Add Todo</h2>
       <input
         type="text"
@@ -225,15 +228,13 @@ function App() {
         {todoId ? "Update Todo" : "Add Todo"}
       </button>
 
+      {/* Renderizar Todos */}
       <h2>Todos</h2>
       {targets.map((target) => (
         <div key={target.id}>
           <h3>{target.title}</h3>
-          {target.todo.map((todo) => (
-            <h2 key={todo.id}>{todo.description}</h2>
-          ))}
           {todos
-            .filter((todo) => todo.targetId === target.id) // Filtra os todos pelo targetId
+            .filter((todo) => todo.targetId === target.id) // Filtrar todos os todos pelo targetId
             .map((todo) => (
               <div className="todosDiv" key={todo.id}>
                 <h4>{todo.title}</h4>
